@@ -170,17 +170,13 @@ Multipart: fields plus files `image` and/or `hero_image`. Frontend maps uploads 
 
 ## 5. Known limitations
 
-- **Admin has no login.** Profile icon opens `/admin/catalog`. Product write APIs are public.
-- **Cart is not on the server** until checkout. Another tab/device does not share the cart; stock is only reserved at checkout (race possible between two buyers until `lockForUpdate` runs).
-- **Checkout is not a real payment.** Order is stored as `paid` immediately; no gateway, email, or shipping.
-- **`POST /login` and Sanctum** are unused by the React app (`rocecaf-token` is read but never set in the UI).
-- **PDP Details / Packaging** accordions were removed; fields may still exist in admin/API.
-- **No guest accounts, order history, or inventory dashboard** beyond the catalog grid.
-- **Hero / motion** is a simplified Figma-inspired cycle, not a 1:1 Framer export.
-- **Frontend has no automated tests;** time went to UI and checkout.
-- **`axios` is in `package.json` but the client uses `fetch`.**
-- Product images must exist under `backend/public/products` (or the image controller fallback). A missing file shows a broken image until re-uploaded.
-- **Vercel hosts the Vite app only.** Laravel is not deployed with this frontend. Online, the shop uses bundled dummy products (and `localStorage` after the first visit) unless you set `VITE_API_URL` to a hosted API.
+- Admin doens't require login
+- No guest accounts
+- No order history
+- Not optimizing and overlapping code
+- Figma implementation doesn't fully implemented
+- Little error handling
+- Vercel hosts the Vite app only.
 
 ---
 
