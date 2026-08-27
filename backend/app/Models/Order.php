@@ -6,5 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    //
+    protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return [
+            'total' => 'integer',
+        ];
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

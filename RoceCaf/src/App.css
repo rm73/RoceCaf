@@ -1,5 +1,12 @@
 :root { --ink:#282828; --cream:#ffefda; --paper:#f8f7f3; --lime:#e4ffc0; --green:#b7ec73; --orange:#ffd399; --line:#d9d5cc; --serif: Georgia, 'Times New Roman', serif; }
-#root { min-height:100vh; overflow-x:hidden; }
+html,
+body {
+	overflow-x: clip;
+}
+
+#root {
+	min-height: 100vh;
+}
 .site-header { height:64px; display:flex; align-items:center; justify-content:space-between; max-width:1180px; margin:auto; padding:0 32px; background:rgba(248,247,243,.94); position:relative; z-index:3; border-bottom:1px solid var(--line); }
 .brand,.nav-link,.circle-button,.filter,.back-link,.text-button,.more-button { border:0; background:none; color:var(--ink); }
 .brand { font-weight:800; font-size:13px; padding:0; }.brand-mark { display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; margin-right:4px; background:var(--green); font-size:10px; }
