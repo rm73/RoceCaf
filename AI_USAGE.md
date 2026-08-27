@@ -14,6 +14,6 @@ Cursor:
 5. menyambungkan struktur database dari SQLite dan Laravel ke Front-end untuk saling berkomunikasi sesuai penggunaan fitur.
 6. Mengimplementasikan snipet dari code yang saya dapat di Github untuk diaplikasikan ke logika fitur tersebut
 7. Penyesuaian minor untuk design
-8. Membantu deployment ke Vercel 
+8. Bug fixes saat deployment ke Vercel
 
 
