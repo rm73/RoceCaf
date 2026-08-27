@@ -27,7 +27,6 @@ Frontend: `RoceCaf/` (Vite + React). Backend: `backend/` (Laravel + SQLite).
 | Bundler | Vite 8 | Proxies `/api`, `/products`, `/storage` to Laravel |
 | Styling | Plain CSS (`FigmaDesign.css`) | Mathing Figma Original Design |
 | API | Laravel 13 + PHP 8.3 | Products, stock, checkout, and others |
-| DB | SQLite | Local Demo |
 | Cart | `localStorage` + React context | No server load until checkout |
 
 ---
