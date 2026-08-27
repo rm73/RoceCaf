@@ -1,24 +1,11 @@
 # RoceCaf
 
-Shop landing, catalog, product details, cart, and a simple admin catalog for canned and ground drinks.
+RoceCaf is an Product Website that displays catalogs and branding to appeal for office workers, this site features, shop landing, catalog, product details, cart, and a simple admin catalog.
 
 ## Cart: client-side until checkout
 
-Yes. The cart lives only in the browser.
-
-- React context holds cart lines in memory.
-- Lines are saved to `localStorage` under `rocecaf-cart`.
-- Adding, changing quantity, and removing items **does not** call the API.
-- The server is used for catalog/stock (`GET /api/products`) and for **checkout** (`POST /api/checkout`) when a Laravel API is available.
-- On Vercel (no API), dummy products load from the app and are saved in `localStorage` (`rocecaf-catalog`). Checkout still shows a receipt and reduces that stored stock.
-
-That keeps add-to-cart cheap: no cart session on the server until the customer pays (checkout).
-
----
 
 ## 1. Overview
-
-RoceCaf is a small e-commerce front for office drinks (Mocktail, Americano, Matcha — cans and grind).
 
 | Surface | What it does |
 | --- | --- |
@@ -37,16 +24,15 @@ Frontend: `RoceCaf/` (Vite + React). Backend: `backend/` (Laravel + SQLite).
 | Layer | Choice | Why |
 | --- | --- | --- |
 | UI | React 19 | Component shop UI, cart context, overlays |
-| Bundler | Vite 8 | Fast HMR; proxies `/api`, `/products`, `/storage` to Laravel |
-| Styling | Plain CSS (`FigmaDesign.css`) | Match Figma without a utility framework |
-| API | Laravel 13 + PHP 8.3 | Products, stock, checkout in one small API |
-| Auth package | Laravel Sanctum | Present in the project; shop/admin routes are currently public |
-| DB | SQLite | Zero extra services for local demo |
+| Bundler | Vite 8 | Proxies `/api`, `/products`, `/storage` to Laravel |
+| Styling | Plain CSS (`FigmaDesign.css`) | Mathing Figma Original Design |
+| API | Laravel 13 + PHP 8.3 | Products, stock, checkout, and others |
+| DB | SQLite | Local Demo |
 | Cart | `localStorage` + React context | No server load until checkout |
-| HTTP | `fetch` in `src/api.js` | Small client; Vite proxy in dev |
 
 ---
-
+## From this point downwards, it's helped by AI to explain how this website works
+---
 ## 3. Run locally
 
 Need **Node.js**, **PHP 8.3+**, and **Composer**.
@@ -184,17 +170,13 @@ Multipart: fields plus files `image` and/or `hero_image`. Frontend maps uploads 
 
 ## 5. Known limitations
 
-- **Admin has no login.** Profile icon opens `/admin/catalog`. Product write APIs are public.
-- **Cart is not on the server** until checkout. Another tab/device does not share the cart; stock is only reserved at checkout (race possible between two buyers until `lockForUpdate` runs).
-- **Checkout is not a real payment.** Order is stored as `paid` immediately; no gateway, email, or shipping.
-- **`POST /login` and Sanctum** are unused by the React app (`rocecaf-token` is read but never set in the UI).
-- **PDP Details / Packaging** accordions were removed; fields may still exist in admin/API.
-- **No guest accounts, order history, or inventory dashboard** beyond the catalog grid.
-- **Hero / motion** is a simplified Figma-inspired cycle, not a 1:1 Framer export.
-- **Frontend has no automated tests;** time went to UI and checkout.
-- **`axios` is in `package.json` but the client uses `fetch`.**
-- Product images must exist under `backend/public/products` (or the image controller fallback). A missing file shows a broken image until re-uploaded.
-- **Vercel hosts the Vite app only.** Laravel is not deployed with this frontend. Online, the shop uses bundled dummy products (and `localStorage` after the first visit) unless you set `VITE_API_URL` to a hosted API.
+- Admin doens't require login
+- No guest accounts
+- No order history
+- Not optimizing and overlapping code
+- Figma implementation doesn't fully implemented
+- Little error handling
+- Vercel hosts the Vite app only.
 
 ---
 
