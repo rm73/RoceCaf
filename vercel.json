@@ -1,0 +1,9 @@
+{
+  "framework": "vite",
+  "installCommand": "npm install --prefix RoceCaf",
+  "buildCommand": "npm run build --prefix RoceCaf",
+  "outputDirectory": "RoceCaf/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

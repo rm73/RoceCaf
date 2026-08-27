@@ -202,14 +202,24 @@ Multipart: fields plus files `image` and/or `hero_image`. Frontend maps uploads 
 
 Vercel runs the React app in `RoceCaf/`. The dummy catalog images live in `RoceCaf/public/products/` so they load without PHP.
 
-1. Push the repo to GitHub (GitHub.com → New repository, then from the project root: `git add`, `git commit`, `git remote add origin …`, `git push -u origin main`).
-2. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
-3. **Add New… → Project** and import this repository.
-4. Set **Root Directory** to `RoceCaf` (not the repo root that also contains `backend/`).
-5. Framework Preset should be **Vite**. Build Command `npm run build`, Output `dist`. Leave Install as `npm install`.
-6. Do **not** set `VITE_API_URL` unless you have a public Laravel URL. If it is unset, visitors get the dummy Mocktail / Americano / Matcha products, stored in `localStorage` as `rocecaf-catalog`.
-7. Click **Deploy**. After it succeeds, open the `.vercel.app` URL.
-8. Check **landing**, **Catalog**, a product page, **cart**, and **admin** (profile icon). Headers stay at the top while you scroll. Catalog cards should show the dummy cans/grind photos.
-9. If `/catalog` 404s on refresh, confirm `vercel.json` in `RoceCaf/` was uploaded (it rewrites SPA routes to `index.html`).
+A `404: NOT_FOUND` on the `.vercel.app` URL usually means Vercel published the **repo root** (README + `backend/`) instead of the Vite `dist` folder. There is no `index.html` at the repo root.
+
+**Fix an existing project**
+
+1. Push the latest files (`vercel.json` at the repo root, and `RoceCaf/vercel.json`).
+2. In Vercel: **Project → Settings → General → Root Directory** → `RoceCaf` → Save.
+3. **Settings → Build and Deployment**: Framework **Vite**, Build `npm run build`, Output **`dist`** (not `public`).
+4. **Deployments → … on the latest → Redeploy** (or push a new commit).
+
+Alternatively, leave Root Directory empty. The **repo-root** `vercel.json` now builds `RoceCaf` and publishes `RoceCaf/dist`.
+
+**New project**
+
+1. Push the repo to GitHub.
+2. Vercel → **Add New… → Project** → import the repo.
+3. Set **Root Directory** to `RoceCaf`.
+4. Framework **Vite**. Build `npm run build`. Output `dist`.
+5. Do **not** set `VITE_API_URL` unless you have a public Laravel URL.
+6. Deploy, then check landing, Catalog, a product page, cart, and admin.
 
 Optional later: host Laravel (Railway, Render, a VPS), put that API’s CORS and `APP_URL` in order, then add Vercel env `VITE_API_URL=https://your-api.example/api` and `VITE_API_ORIGIN=https://your-api.example`, and redeploy.
