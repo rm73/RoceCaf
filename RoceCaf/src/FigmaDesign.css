@@ -1151,32 +1151,6 @@
 	grid-template-columns: 1.05fr 0.95fr;
 	min-height: calc(100vh - 112px);
 	padding-top: 0;
-	position: relative;
-}
-
-.pdp-back {
-	position: absolute;
-	top: 20px;
-	left: 20px;
-	z-index: 4;
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 8px 14px 8px 10px;
-	border: 1px solid #1e1e1e;
-	border-radius: 8px;
-	background: rgba(255, 255, 255, 0.88);
-	color: #1e1e1e;
-	font-family: Outfit, 'Plus Jakarta Sans', sans-serif;
-	font-size: 16px;
-	font-weight: 500;
-	cursor: pointer;
-}
-
-.pdp-back:hover {
-	background: #fff;
-	color: #3a9700;
-	border-color: #3a9700;
 }
 
 .pdp-gallery {
@@ -1496,21 +1470,11 @@
 
 .cart-foot {
 	display: flex;
-	flex-wrap: wrap;
 	align-items: flex-end;
 	justify-content: space-between;
 	gap: 12px;
 	padding-top: 14px;
 	border-top: 1px solid #d9d9d9;
-}
-
-.cart-error {
-	flex: 1 1 100%;
-	margin: 0;
-	color: #9b1c1c;
-	font-family: Outfit, 'Plus Jakarta Sans', sans-serif;
-	font-size: 14px;
-	line-height: 1.35;
 }
 
 .cart-subtotal p {

@@ -29,12 +29,8 @@ class CheckoutController extends Controller
                 $qty = (int) $row['qty'];
 
                 if ($product->stock < $qty) {
-                    $message = $product->stock < 1
-                        ? "{$product->name} is out of stock."
-                        : "Only {$product->stock} of {$product->name} left in stock.";
-
                     throw ValidationException::withMessages([
-                        'items' => $message,
+                        'items' => "Only {$product->stock} of {$product->name} left in stock.",
                     ]);
                 }
 

@@ -55,7 +55,7 @@ export async function api(path, options = {}) {
 	})
 	const data = await response.json().catch(() => ({}))
 	if (!response.ok) {
-		const message = Object.values(data.errors || {}).flat()[0] || data.message || 'Request failed'
+		const message = data.message || Object.values(data.errors || {}).flat()[0] || 'Request failed'
 		throw Object.assign(new Error(message), { status: response.status, body: data })
 	}
 	return data
