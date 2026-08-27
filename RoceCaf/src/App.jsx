@@ -108,10 +108,11 @@ function useProducts() {
 	return useContext(ProductContext) || { products: [], categories: [], loading: true, error: '', refresh: async () => {}, saveLocal: async () => {}, removeLocal: async () => {}, applyStock() {} }
 }
 function useCart() {
-	return useContext(CartContext) || { add() {}, setQty() {}, checkout() {}, open: false, setOpen() {}, notice: null, receipt: null, setReceipt() {}, count: 0, lines: [], subtotal: 0, busy: false }
+	return useContext(CartContext) || { add() {}, setQty() {}, checkout() {}, open: false, setOpen() {}, notice: null, receipt: null, setReceipt() {}, checkoutError: '', count: 0, lines: [], subtotal: 0, busy: false }
 }
 const CATALOG_KEY = 'rocecaf-catalog'
 const CATEGORY_KEY = 'rocecaf-categories'
+const STOCK_REV = 'rocecaf-stock-rev'
 function loadStoredCatalog() {
 	try {
 		const products = JSON.parse(localStorage.getItem(CATALOG_KEY) || 'null')
@@ -125,6 +126,9 @@ function loadStoredCatalog() {
 function persistCatalog(products, categories) {
 	localStorage.setItem(CATALOG_KEY, JSON.stringify(products))
 	localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories))
+}
+function pingStock() {
+	localStorage.setItem(STOCK_REV, String(Date.now()))
 }
 function ProductProvider({ children }) {
 	const [products, setProducts] = useState([])
@@ -197,6 +201,20 @@ function ProductProvider({ children }) {
 		applyRows(products, stored.categories)
 	}
 	useEffect(() => { refresh() }, [])
+	useEffect(() => {
+		const onStock = (event) => {
+			if (event.key === STOCK_REV || event.key === CATALOG_KEY) refresh()
+		}
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') refresh()
+		}
+		window.addEventListener('storage', onStock)
+		document.addEventListener('visibilitychange', onVisible)
+		return () => {
+			window.removeEventListener('storage', onStock)
+			document.removeEventListener('visibilitychange', onVisible)
+		}
+	}, [])
 	return <ProductContext.Provider value={{ products, categories, loading, error, refresh, saveLocal, removeLocal, applyStock }}>{children}</ProductContext.Provider>
 }
 function rupiah(value) {
@@ -219,11 +237,12 @@ function loadCart() {
 	}
 }
 function CartProvider({ children }) {
-	const { products, refresh, applyStock } = useProducts()
+	const { products, refresh } = useProducts()
 	const [items, setItems] = useState(loadCart)
 	const [open, setOpen] = useState(false)
 	const [notice, setNotice] = useState(null)
 	const [receipt, setReceipt] = useState(null)
+	const [checkoutError, setCheckoutError] = useState('')
 	const [busy, setBusy] = useState(false)
 	useEffect(() => {
 		localStorage.setItem(CART_KEY, JSON.stringify(items))
@@ -242,6 +261,11 @@ function CartProvider({ children }) {
 		}))
 	}, [products])
 	const stockFor = (id) => products.find((entry) => entry.id === id)?.stock ?? 0
+	const openCart = (next) => {
+		const shouldOpen = typeof next === 'boolean' ? next : !open
+		setOpen(shouldOpen)
+		if (shouldOpen) refresh()
+	}
 	const add = (product, qty = 1) => {
 		if (!product || product.stock < 1) {
 			setNotice({ name: product?.name || 'Sold out', qty: 0 })
@@ -252,7 +276,7 @@ function CartProvider({ children }) {
 		const added = next - have
 		if (added < 1) {
 			setNotice({ name: product.name, image: product.image, qty: 0 })
-			setOpen(true)
+			openCart(true)
 			return
 		}
 		setItems((current) => {
@@ -261,7 +285,7 @@ function CartProvider({ children }) {
 			return [...current, { id: product.id, qty: next }]
 		})
 		setNotice({ id: product.id, name: product.name, image: product.image, qty: added })
-		setOpen(true)
+		openCart(true)
 	}
 	const setQty = (id, qty) => {
 		const stock = stockFor(id)
@@ -274,36 +298,33 @@ function CartProvider({ children }) {
 	const checkout = async () => {
 		if (!items.length || busy) return
 		setBusy(true)
+		setCheckoutError('')
 		try {
 			const snapshot = {
 				when: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
 				lines: lines.map((line) => ({ id: line.id, title: line.product.title, qty: line.qty, lineTotal: line.lineTotal })),
 				subtotal,
 			}
-			const sold = items.map((item) => {
+			const payload = items.map((item) => {
 				const product = products.find((entry) => entry.id === item.id)
-				return { product_id: product?.dbId, id: product?.slug, qty: item.qty }
-			}).filter((item) => item.product_id || item.id)
-			if (apiEnabled()) {
-				try {
-					await api('/checkout', {
-						method: 'POST',
-						body: JSON.stringify({
-							items: sold.filter((item) => item.product_id).map((item) => ({ product_id: item.product_id, qty: item.qty })),
-						}),
-					})
-					await refresh()
-				} catch {
-					applyStock(sold)
-				}
-			} else {
-				applyStock(sold)
-			}
+				return { product_id: product?.dbId, qty: item.qty }
+			}).filter((item) => item.product_id)
+			if (!payload.length) throw new Error('Could not verify stock with the server.')
+			await api('/checkout', { method: 'POST', body: JSON.stringify({ items: payload }) })
+			await refresh()
+			pingStock()
 			setItems([])
 			setOpen(false)
 			setReceipt(snapshot)
 		} catch (err) {
-			setNotice({ name: err.message, qty: 0 })
+			const raw = String(err.message || '')
+			const message = /timeout|network|failed to fetch|abort/i.test(raw)
+				? 'Could not reach the server to verify stock.'
+				: raw || 'Not enough stock to check out.'
+			setCheckoutError(message)
+			setNotice({ name: message, qty: 0 })
+			await refresh()
+			pingStock()
 		} finally {
 			setBusy(false)
 		}
@@ -314,7 +335,7 @@ function CartProvider({ children }) {
 		return { ...item, product, lineTotal: (product?.price || 0) * item.qty }
 	}).filter((line) => line.product)
 	const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0)
-	return <CartContext.Provider value={{ add, setQty, checkout, open, setOpen, notice, receipt, setReceipt, count, lines, subtotal, busy }}>
+	return <CartContext.Provider value={{ add, setQty, checkout, open, setOpen: openCart, notice, receipt, setReceipt, checkoutError, count, lines, subtotal, busy }}>
 		{children}
 		<CartNotice />
 		<ReceiptOverlay />
@@ -381,7 +402,7 @@ function ReceiptOverlay() {
 	</>
 }
 function CartOverlay() {
-	const { open, setOpen, lines, subtotal, setQty, checkout, busy } = useCart()
+	const { open, setOpen, lines, subtotal, setQty, checkout, busy, checkoutError } = useCart()
 	const panelRef = useRef(null)
 	useEffect(() => {
 		if (!open) return
@@ -423,6 +444,7 @@ function CartOverlay() {
 					<p>Subtotal</p>
 					<strong>{rupiah(subtotal)}</strong>
 				</div>
+				{checkoutError && <p className="cart-error" role="alert">{checkoutError}</p>}
 				<button type="button" className="cart-checkout" onClick={checkout} disabled={!lines.length || busy}>{busy ? 'Checking out…' : 'Check Out'}</button>
 			</div>
 		</div>
@@ -540,12 +562,17 @@ function Details({ id }) {
 	useEffect(() => {
 		if (product) setQty((value) => Math.min(Math.max(1, value), Math.max(1, product.stock)))
 	}, [product])
-	if (loading && !product) return <div className="shop-page pdp-page"><FigmaHeader /><main className="pdp"><p className="pdp-blurb">Loading product…</p></main></div>
-	if (!product) return <div className="shop-page pdp-page"><FigmaHeader /><main className="pdp"><p className="pdp-blurb">This product is no longer available.</p></main></div>
+	const back = <button type="button" className="pdp-back" onClick={() => go('/catalog')}>
+		<svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+		Back
+	</button>
+	if (loading && !product) return <div className="shop-page pdp-page"><FigmaHeader /><main className="pdp">{back}<p className="pdp-blurb">Loading product…</p></main></div>
+	if (!product) return <div className="shop-page pdp-page"><FigmaHeader /><main className="pdp">{back}<p className="pdp-blurb">This product is no longer available.</p></main></div>
 	const atMax = qty >= product.stock
 	return <div className="shop-page pdp-page">
 		<FigmaHeader />
 		<main className="pdp">
+			{back}
 			<section className="pdp-gallery">
 				<img src={product.hero} alt={product.name} />
 			</section>
